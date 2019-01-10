@@ -13,6 +13,5 @@ dependencies:
 dev_dependencies:
   angel_framework: ^2.0.0-alpha
   cli_repl:
-  path:
   pedantic: ^1.0.0
   test: ^1.0.0

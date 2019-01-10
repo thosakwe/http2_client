@@ -5,7 +5,6 @@ import 'package:angel_framework/http.dart';
 import 'package:angel_framework/http2.dart';
 import 'package:http/http.dart';
 import 'package:http2_client/http2_client.dart';
-import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {

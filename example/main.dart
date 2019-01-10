@@ -15,8 +15,10 @@ main() async {
   for (var url in repl.run()) {
     if (url == 'quit') break;
     var response = await client.get(url, headers: {
-      'accept': 'text/html, application/json, text/*',
-      'user-agent': 'dart-http2client-example'
+      'accept': '*/*',
+      'accept-encoding': 'gzip, deflate',
+      'user-agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
     });
     dumpResponse(url, response);
   }

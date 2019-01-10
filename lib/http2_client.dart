@@ -113,10 +113,10 @@ class Http2Client extends BaseClient {
         }
 
         var headers = [
+          Header.ascii(':authority', request.url.authority),
           Header.ascii(':method', request.method),
           Header.ascii(':path', request.url.path),
           Header.ascii(':scheme', request.url.scheme),
-          Header.ascii(':authority', request.url.authority),
         ];
 
         request.headers.forEach((k, v) {
