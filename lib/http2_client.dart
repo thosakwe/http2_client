@@ -68,79 +68,91 @@ class Http2Client extends BaseClient {
   }
 
   Future<StreamedResponse> _send(
-      BaseRequest request, List<RedirectInfo> redirects) {
+      BaseRequest request, List<RedirectInfo> redirects) async {
     if (request.url.scheme != 'https') {
       return http1Client.send(request);
     } else {
-      Future<ClientTransportConnection> connectionFuture;
+      ClientTransportConnection connection;
 
       if (maintainOpenConnections && _sockets.containsKey(request.url.host)) {
-        connectionFuture = Future.value(_sockets[request.url.host]);
-      } else {
-        connectionFuture = SecureSocket.connect(
-                request.url.host, request.url.port,
-                supportedProtocols: ['h2'],
-                onBadCertificate: onBadCertificate,
-                context: context,
-                timeout: timeout)
-            .then((socket) async {
-          if (socket.selectedProtocol != 'h2') {
-            // This isn't HTTP/2, fall back to HTTP/1.x
-            // Close the socket, because there's no way to convert an existing
-            // socket into an HttpClientRequest.
-            await socket.close();
-            return null;
-          } else {
-            // Close any connections that have overstayed their welcome.
-            if (maxOpenConnections > -1) {
-              while (_sockets.length >= maxOpenConnections) {
-                var transport = _sockets.remove(_sockets.keys.first);
-                await transport.finish();
-              }
-            }
-
-            var transport = ClientTransportConnection.viaSocket(socket);
-            if (maintainOpenConnections) _sockets[request.url.host] = transport;
-            return transport;
-          }
-        });
+        // If this transport is closed, form a new connection.
+        connection = _sockets[request.url.host];
+        if (!connection.isOpen) {
+          connection = null;
+          _sockets.remove(request.url.host);
+        }
       }
 
-      return connectionFuture.then((transport) async {
-        if (transport == null) {
-          // Use HTTP/1.1 instead.
-          return await http1Client.send(request);
+      if (connection == null) {
+        var socket = await SecureSocket.connect(
+            request.url.host, request.url.port,
+            supportedProtocols: ['h2'],
+            onBadCertificate: onBadCertificate,
+            context: context,
+            timeout: timeout);
+
+        if (socket.selectedProtocol != 'h2') {
+          // This isn't HTTP/2, fall back to HTTP/1.x
+          // Close the socket, because there's no way to convert an existing
+          // socket into an HttpClientRequest.
+          await socket.close();
+          return null;
+        } else {
+          // Close any connections that have overstayed their welcome.
+          if (maxOpenConnections > -1) {
+            while (_sockets.length >= maxOpenConnections) {
+              var transport = _sockets.remove(_sockets.keys.first);
+              await transport.finish();
+            }
+          }
+
+          var transport = ClientTransportConnection.viaSocket(socket);
+
+          if (maintainOpenConnections) {
+            _sockets[request.url.host] = transport;
+
+            // If the socket closes before another use, remove it from
+            // memory.
+            // transport.
+          }
+
+          connection = transport;
         }
+      }
 
-        var headers = [
-          Header.ascii(':authority', request.url.authority),
-          Header.ascii(':method', request.method),
-          Header.ascii(':path', request.url.path),
-          Header.ascii(':scheme', request.url.scheme),
-        ];
+      var transport = connection;
+      if (transport == null) {
+        // Use HTTP/1.1 instead.
+        return await http1Client.send(request);
+      }
 
-        request.headers.forEach((k, v) {
-          headers.add(Header.ascii(k.toLowerCase(), v));
-        });
+      var headers = [
+        Header.ascii(':authority', request.url.authority),
+        Header.ascii(':method', request.method),
+        Header.ascii(':path', request.url.path),
+        Header.ascii(':scheme', request.url.scheme),
+      ];
 
-        var stream = transport.makeRequest(headers, endStream: false);
-
-        stream.peerPushes.listen((push) {
-          _fromStream(request, push.stream, redirects, push.requestHeaders)
-              .then(_onPush.add);
-        });
-
-        await request
-            .finalize()
-            .forEach(stream.sendData)
-            .then((_) => stream.outgoingMessages.close());
-
-        return await _fromStream(request, stream, redirects).then((t) {
-          var response = t.item2;
-          if (maintainOpenConnections) response;
-          return transport.finish().then((_) => response);
-        });
+      request.headers.forEach((k, v) {
+        headers.add(Header.ascii(k.toLowerCase(), v));
       });
+
+      var stream = transport.makeRequest(headers, endStream: false);
+
+      stream.peerPushes.listen((push) {
+        _fromStream(request, push.stream, redirects, push.requestHeaders)
+            .then(_onPush.add);
+      });
+
+      await request
+          .finalize()
+          .forEach(stream.sendData)
+          .then((_) => stream.outgoingMessages.close());
+
+      var t = await _fromStream(request, stream, redirects);
+      var response = t.item2;
+      if (maintainOpenConnections) response;
+      return transport.finish().then((_) => response);
     }
   }
 
