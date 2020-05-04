@@ -37,7 +37,7 @@ void main() {
       return 'Yes';
     });
 
-    var ctx = new SecurityContext()
+    var ctx = SecurityContext()
       ..useCertificateChain('dev.pem')
       ..usePrivateKey('dev.key', password: 'dartdart')
       ..setAlpnProtocols(['h2'], true);

@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:cli_repl/cli_repl.dart';
 import 'package:http/http.dart';
 import 'package:http2_client/http2_client.dart';
 
-main() async {
+Future<void> main() async {
   var client = Http2Client(maxOpenConnections: Platform.numberOfProcessors);
   var repl = Repl(prompt: 'Enter a URL, or "quit": ');
 

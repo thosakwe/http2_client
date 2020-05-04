@@ -53,7 +53,7 @@ class Http2Client extends BaseClient {
       this.onBadCertificate,
       this.context,
       this.timeout})
-      : this.http1Client = http1Client ?? IOClient() {
+      : http1Client = http1Client ?? IOClient() {
     assert(maxOpenConnections == -1 || maxOpenConnections > 0,
         'maxOpenConnections must be -1, or > 0.');
   }
@@ -148,87 +148,87 @@ class Http2Client extends BaseClient {
   static String findReasonPhrase(int statusCode) {
     switch (statusCode) {
       case HttpStatus.continue_:
-        return "Continue";
+        return 'Continue';
       case HttpStatus.switchingProtocols:
-        return "Switching Protocols";
+        return 'Switching Protocols';
       case HttpStatus.ok:
-        return "OK";
+        return 'OK';
       case HttpStatus.created:
-        return "Created";
+        return 'Created';
       case HttpStatus.accepted:
-        return "Accepted";
+        return 'Accepted';
       case HttpStatus.nonAuthoritativeInformation:
-        return "Non-Authoritative Information";
+        return 'Non-Authoritative Information';
       case HttpStatus.noContent:
-        return "No Content";
+        return 'No Content';
       case HttpStatus.resetContent:
-        return "Reset Content";
+        return 'Reset Content';
       case HttpStatus.partialContent:
-        return "Partial Content";
+        return 'Partial Content';
       case HttpStatus.multipleChoices:
-        return "Multiple Choices";
+        return 'Multiple Choices';
       case HttpStatus.movedPermanently:
-        return "Moved Permanently";
+        return 'Moved Permanently';
       case HttpStatus.found:
-        return "Found";
+        return 'Found';
       case HttpStatus.seeOther:
-        return "See Other";
+        return 'See Other';
       case HttpStatus.notModified:
-        return "Not Modified";
+        return 'Not Modified';
       case HttpStatus.useProxy:
-        return "Use Proxy";
+        return 'Use Proxy';
       case HttpStatus.temporaryRedirect:
-        return "Temporary Redirect";
+        return 'Temporary Redirect';
       case HttpStatus.badRequest:
-        return "Bad Request";
+        return 'Bad Request';
       case HttpStatus.unauthorized:
-        return "Unauthorized";
+        return 'Unauthorized';
       case HttpStatus.paymentRequired:
-        return "Payment Required";
+        return 'Payment Required';
       case HttpStatus.forbidden:
-        return "Forbidden";
+        return 'Forbidden';
       case HttpStatus.notFound:
-        return "Not Found";
+        return 'Not Found';
       case HttpStatus.methodNotAllowed:
-        return "Method Not Allowed";
+        return 'Method Not Allowed';
       case HttpStatus.notAcceptable:
-        return "Not Acceptable";
+        return 'Not Acceptable';
       case HttpStatus.proxyAuthenticationRequired:
-        return "Proxy Authentication Required";
+        return 'Proxy Authentication Required';
       case HttpStatus.requestTimeout:
-        return "Request Time-out";
+        return 'Request Time-out';
       case HttpStatus.conflict:
-        return "Conflict";
+        return 'Conflict';
       case HttpStatus.gone:
-        return "Gone";
+        return 'Gone';
       case HttpStatus.lengthRequired:
-        return "Length Required";
+        return 'Length Required';
       case HttpStatus.preconditionFailed:
-        return "Precondition Failed";
+        return 'Precondition Failed';
       case HttpStatus.requestEntityTooLarge:
-        return "Request Entity Too Large";
+        return 'Request Entity Too Large';
       case HttpStatus.requestUriTooLong:
-        return "Request-URI Too Long";
+        return 'Request-URI Too Long';
       case HttpStatus.unsupportedMediaType:
-        return "Unsupported Media Type";
+        return 'Unsupported Media Type';
       case HttpStatus.requestedRangeNotSatisfiable:
-        return "Requested range not satisfiable";
+        return 'Requested range not satisfiable';
       case HttpStatus.expectationFailed:
-        return "Expectation Failed";
+        return 'Expectation Failed';
       case HttpStatus.internalServerError:
-        return "Internal Server Error";
+        return 'Internal Server Error';
       case HttpStatus.notImplemented:
-        return "Not Implemented";
+        return 'Not Implemented';
       case HttpStatus.badGateway:
-        return "Bad Gateway";
+        return 'Bad Gateway';
       case HttpStatus.serviceUnavailable:
-        return "Service Unavailable";
+        return 'Service Unavailable';
       case HttpStatus.gatewayTimeout:
-        return "Gateway Time-out";
+        return 'Gateway Time-out';
       case HttpStatus.httpVersionNotSupported:
-        return "Http Version not supported";
+        return 'Http Version not supported';
       default:
-        return "Status $statusCode";
+        return 'Status $statusCode';
     }
   }
 
@@ -353,8 +353,11 @@ class Http2Client extends BaseClient {
 }
 
 class _RedirectInfo implements RedirectInfo {
+  @override
   final String method;
+  @override
   final int statusCode;
+  @override
   final Uri location;
 
   _RedirectInfo(this.method, this.statusCode, this.location);
