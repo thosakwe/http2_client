@@ -100,6 +100,11 @@ void main() {
     }
   });
 
+  test('http/1 site fallback test', () async {
+    var response = await client.get('https://naver.com');
+    expect(response.body, isNotEmpty);
+  });
+
   group('uncompress', () {
     test('gzip', () async {
       var response = await client.get(baseUrl.replace(path: 'compress'),
