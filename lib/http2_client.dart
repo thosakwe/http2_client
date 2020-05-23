@@ -67,6 +67,30 @@ class Http2Client extends BaseClient {
     return _send(request, []);
   }
 
+  Future<SecureSocket> _connect(BaseRequest request) async {
+    try {
+      var secureSocket =
+          await SecureSocket.connect(request.url.host, request.url.port,
+              supportedProtocols: [
+                'h2',
+                'http/1.1',
+                'http/1.0',
+              ],
+              onBadCertificate: onBadCertificate,
+              context: context,
+              timeout: timeout);
+      if (secureSocket.selectedProtocol != 'h2') {
+        //'Failed to negogiate http/2 via alpn. Maybe server
+        //    doesn't support http/2.;
+        await secureSocket.close();
+        return null;
+      }
+      return secureSocket;
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<StreamedResponse> _send(
       BaseRequest request, List<RedirectInfo> redirects) async {
     if (request.url.scheme != 'https') {
@@ -84,19 +108,10 @@ class Http2Client extends BaseClient {
       }
 
       if (connection == null) {
-        var socket = await SecureSocket.connect(
-            request.url.host, request.url.port,
-            supportedProtocols: ['h2'],
-            onBadCertificate: onBadCertificate,
-            context: context,
-            timeout: timeout);
-
-        if (socket.selectedProtocol != 'h2') {
+        var socket = await _connect(request);
+        if (socket == null) {
           // This isn't HTTP/2, fall back to HTTP/1.x
-          // Close the socket, because there's no way to convert an existing
-          // socket into an HttpClientRequest.
-          await socket.close();
-          return null;
+          return http1Client.send(request);
         } else {
           // Close any connections that have overstayed their welcome.
           if (maxOpenConnections > -1) {
